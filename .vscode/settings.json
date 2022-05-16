@@ -1,0 +1,16 @@
+{
+    "robloxLsp.diagnostics.globals": [
+        "Functions",
+        "functions",
+        "getgenv",
+        "isfile",
+        "writefile",
+        "appendfile",
+        "readfile",
+        "Settings",
+        "fireproximityprompt",
+        "Stand_Farm",
+        "Whitelisted_Stands",
+        "Whitelisted_Attributes"
+    ]
+}
