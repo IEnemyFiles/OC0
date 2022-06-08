@@ -1,12 +1,10 @@
---https://www.roblox.com/games/9561878567/CORRUPTION-Forest-Of-Beginnings-RPG#!/game-instances
-
 local Players = game:GetService("Players")
 
 local LocalPlayer = Players.LocalPlayer
 local playerCharacter = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local playersSword
 
-function setPlayersSword(player)
+function setPlayersSword()
     playersSword = LocalPlayer.Character:FindFirstChildOfClass("Tool")
     
     if playersSword == nil then
@@ -41,19 +39,21 @@ end
 function dealDamage(Mob)
     local mobLimb = Mob:FindFirstChild("HumanoidRootPart")
     local mobHumanoid = Mob:FindFirstChild("Enemy")
-    local sword = playersSword
+    local sword = playersSword or setPlayersSword()
     
     if mobLimb and mobHumanoid and sword then
         game:GetService("ReplicatedStorage").GameRemotes.DamageEvent:FireServer(mobLimb, mobHumanoid, sword)
     end
 end
 
+LocalPlayer.Backpack.ChildAdded:Connect(setPlayersSword)
+
+setPlayersSword()
+
 while LoopKillAll do
     for i,v in pairs(workspace.Mobs:GetChildren()) do
-        setPlayersSword(LocalPlayer)
-    
         dealDamage(v)
     end
     
-    task.Wait(2)
+    task.wait(2)
 end
