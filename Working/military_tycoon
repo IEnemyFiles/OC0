@@ -1,29 +1,46 @@
+repeat task.wait() until game:IsLoaded()
+
 local Players = game:GetService("Players")
 
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Tycoons = game:GetService("Workspace").PlayerTycoons
-local SelectedTycoon
+if LocalPlayer.PlayerGui.UI.MainUI:FindFirstChild("CashMenu") then
+    LocalPlayer.PlayerGui.UI.MainUI.CashMenu:Destroy()
+end
 
-for i,v in pairs(Tycoons:GetChildren()) do
-    if SelectedTycoon == nil then
-        if v.TycoonVals.Owner.Value == LocalPlayer then
-            SelectedTycoon = v
+local Tycoons = game:GetService("Workspace").PlayerTycoons
+
+function GetPlayersTycoon()
+    for i,v in pairs(Tycoons:GetChildren()) do
+        if SelectedTycoon == nil then
+            if v.TycoonVals.Owner.Value == LocalPlayer then
+                return v
+            end
         end
     end
+end
+
+local SelectedTycoon = GetPlayersTycoon()
+
+if SelectedTycoon == nil then
+    repeat
+        SelectedTycoon = GetPlayersTycoon()
+        task.wait(1)
+        print(1)
+    until SelectedTycoon ~= nil
 end
 
 local CollectButton
 
 if SelectedTycoon then
-    CollectButton = SelectedTycoon.Essentials.Giver.CollectButton
+    CollectButton = SelectedTycoon.Essentials.Giver:WaitForChild("CollectButton")
 end
 
 function CollectMoney()
     if SelectedTycoon.TycoonVals.CashCollect.Value > 0 then
         if Character:FindFirstChild("HumanoidRootPart") then
-            Character.HumanoidRootPart.CFrame = CFrame.new(CollectButton.Position) * CFrame.new(0, 5, 0)
+            Character.HumanoidRootPart.CFrame = CFrame.new(CollectButton.Position) * CFrame.new(0, math.random(1,2), 0)
             firetouchinterest(Character.HumanoidRootPart, CollectButton, 1)
             task.wait()
             firetouchinterest(Character.HumanoidRootPart, CollectButton, 0)
@@ -173,7 +190,7 @@ local Slider4 = Section4:CreateSlider("Tile Scale",0,1,nil,false, function(Value
 end)
 Slider4:SetValue(0.5)
 
-game:GetService("Runservice"):Connection(function()
+game:GetService("RunService").RenderStepped:Connect(function()
     if AutoFarm then
         for i,v in pairs(Character:GetChildren()) do
             if v.Name == "HumanoidRootPart" then
@@ -182,6 +199,16 @@ game:GetService("Runservice"):Connection(function()
 
             if v:IsA("Part") then
                 v.CanCollide = false
+            end
+        end
+    else
+        for i,v in pairs(Character:GetChildren()) do
+            if v.Name == "HumanoidRootPart" then
+                v.Anchored = false
+            end
+
+            if v:IsA("Part") then
+                v.CanCollide = true
             end
         end
     end
