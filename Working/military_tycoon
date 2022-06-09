@@ -45,22 +45,27 @@ function GetCheapestWorkerButton()
     local CheapestButton, CheapestButtonPrice
     
     for i,v in pairs(SelectedTycoon.Buttons:GetChildren()) do
-        if string.find(v.Name, "Worker") then
-            if v:FindFirstChild("Button") and (v.Button.BrickColor == BrickColor.new(0, 255, 0) or v.Button.BrickColor == BrickColor.new(255, 0 ,0)) then
-                local Billboard = v.Button:FindFirstChildOfClass("BillboardGui")
-                
-                if Billboard and v.Button:FindFirstChildOfClass("BillboardGui"):FindFirstChild("Price") then
-                    if CheapestButtonPrice == nil then
-                        CheapestButtonPrice = getButtonPrice(v.Button)
-                    elseif CheapestButtonPrice > getButtonPrice(v.Button) then
-                        CheapestButtonPrice, CheapestButton = getButtonPrice(v.Button)
+        if v:FindFirstChild("Button") and (v.Button.BrickColor == BrickColor.new(0, 255, 0) or v.Button.BrickColor == BrickColor.new(255, 0 ,0)) then
+            local Billboard = v.Button:FindFirstChildOfClass("BillboardGui")
+            
+            if Billboard then
+                local Price = v.Button:FindFirstChildOfClass("BillboardGui"):FindFirstChild("Price")    
+                local Text = v.Button:FindFirstChildOfClass("BillboardGui"):FindFirstChild("Title")
+                    
+                if Text and Price then
+                    if Text.Text == "Worker" then
+                        if CheapestButtonPrice == nil then
+                            CheapestButtonPrice, CheapestButton = getButtonPrice(v.Button)
+                        elseif CheapestButtonPrice > getButtonPrice(v.Button) then
+                            CheapestButtonPrice, CheapestButton = getButtonPrice(v.Button)
+                        end
                     end
                 end
             end
         end
     end
     
-    return CheapestButton, CheapestButton
+    return CheapestButton, CheapestButtonPrice
 end
 
 function GetCheapestButton()
@@ -80,11 +85,15 @@ function GetCheapestButton()
         end 
     end
     
-    return CheapestButton, CheapestButton
+    return CheapestButton, CheapestButtonPrice
 end
 
 function PressButton()
-    local v = GetCheapestWorkerButton() or GetCheapestButton()
+    local v = GetCheapestWorkerButton()
+    
+    if v == nil then
+        v = GetCheapestButton()
+    end
 
     if v then
         if v.BrickColor == BrickColor.new(0, 255, 0) then
@@ -163,6 +172,20 @@ local Slider4 = Section4:CreateSlider("Tile Scale",0,1,nil,false, function(Value
 	Window:SetTileScale(Value)
 end)
 Slider4:SetValue(0.5)
+
+game:GetService("Runservice"):Connection(function()
+    if AutoFarm then
+        for i,v in pairs(Character:GetChildren()) do
+            if v.Name == "HumanoidRootPart" then
+                v.Anchored = true
+            end
+
+            if v:IsA("Part") then
+                v.CanCollide = false
+            end
+        end
+    end
+end)
 
 task.spawn(function()
     while task.wait() do
