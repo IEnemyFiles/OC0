@@ -1,0 +1,174 @@
+local Players = game:GetService("Players")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+local Tycoons = game:GetService("Workspace").PlayerTycoons
+local SelectedTycoon
+
+for i,v in pairs(Tycoons:GetChildren()) do
+    if SelectedTycoon == nil then
+        if v.TycoonVals.Owner.Value == LocalPlayer then
+            SelectedTycoon = v
+        end
+    end
+end
+
+local CollectButton
+
+if SelectedTycoon then
+    CollectButton = SelectedTycoon.Essentials.Giver.CollectButton
+end
+
+function CollectMoney()
+    if SelectedTycoon.TycoonVals.CashCollect.Value > 0 then
+        if Character:FindFirstChild("HumanoidRootPart") then
+            Character.HumanoidRootPart.CFrame = CFrame.new(CollectButton.Position) * CFrame.new(0, 5, 0)
+            firetouchinterest(Character.HumanoidRootPart, CollectButton, 1)
+            task.wait()
+            firetouchinterest(Character.HumanoidRootPart, CollectButton, 0)
+        end
+    end
+end
+
+function getButtonPrice(Button)
+    local Billboard = Button:FindFirstChild("BillboardGui")
+    
+    if Billboard and Billboard:FindFirstChild("Price") then
+        local subbed = string.sub(Billboard.Price.Text, 3)
+
+        return tonumber(string.sub(subbed, 0, string.len(subbed)-1)), Button
+    end
+end
+
+function GetCheapestWorkerButton()
+    local CheapestButton, CheapestButtonPrice
+    
+    for i,v in pairs(SelectedTycoon.Buttons:GetChildren()) do
+        if string.find(v.Name, "Worker") then
+            if v:FindFirstChild("Button") and (v.Button.BrickColor == BrickColor.new(0, 255, 0) or v.Button.BrickColor == BrickColor.new(255, 0 ,0)) then
+                local Billboard = v.Button:FindFirstChildOfClass("BillboardGui")
+                
+                if Billboard and v.Button:FindFirstChildOfClass("BillboardGui"):FindFirstChild("Price") then
+                    if CheapestButtonPrice == nil then
+                        CheapestButtonPrice = getButtonPrice(v.Button)
+                    elseif CheapestButtonPrice > getButtonPrice(v.Button) then
+                        CheapestButtonPrice, CheapestButton = getButtonPrice(v.Button)
+                    end
+                end
+            end
+        end
+    end
+    
+    return CheapestButton, CheapestButton
+end
+
+function GetCheapestButton()
+    local CheapestButton, CheapestButtonPrice
+    
+    for i,v in pairs(SelectedTycoon.Buttons:GetChildren()) do
+        if v:FindFirstChild("Button") and v.Button.BrickColor == BrickColor.new(0, 255, 0) or v.Button.BrickColor == BrickColor.new(255, 0 ,0) then
+            local Billboard = v.Button:FindFirstChildOfClass("BillboardGui")
+            
+            if Billboard and v.Button:FindFirstChildOfClass("BillboardGui"):FindFirstChild("Price") then
+                if CheapestButtonPrice == nil then
+                    CheapestButtonPrice, CheapestButton = getButtonPrice(v.Button)
+                elseif CheapestButtonPrice > getButtonPrice(v.Button) then
+                    CheapestButtonPrice, CheapestButton = getButtonPrice(v.Button)
+                end
+            end
+        end 
+    end
+    
+    return CheapestButton, CheapestButton
+end
+
+function PressButton()
+    local v = GetCheapestWorkerButton() or GetCheapestButton()
+
+    if v then
+        if v.BrickColor == BrickColor.new(0, 255, 0) then
+            Character.HumanoidRootPart.CFrame = CFrame.new(v.Position) * CFrame.new(0, 5, 0)
+            firetouchinterest(Character.HumanoidRootPart, v, 1)
+            task.wait()
+            firetouchinterest(Character.HumanoidRootPart, v, 0)
+        end
+    end
+end
+
+local Config = {
+    WindowName = "Military Tycoon",
+	Color = Color3.fromRGB(255,128,64),
+	Keybind = Enum.KeyCode.RightBracket
+}
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/BracketV3.lua"))()
+local Window = Library:CreateWindow(Config, game:GetService("CoreGui"))
+
+local Tab1 = Window:CreateTab("Main")
+local Tab2 = Window:CreateTab("UI Settings")
+
+local Section1 = Tab1:CreateSection("Auto Farm")
+local Section3 = Tab2:CreateSection("Menu")
+local Section4 = Tab2:CreateSection("Background")
+
+Section1:CreateToggle("Toggle", false, function(State)
+    getgenv().AutoFarm = State
+end)
+
+local Toggle3 = Section3:CreateToggle("UI Toggle", nil, function(State)
+	Window:Toggle(State)
+end)
+Toggle3:CreateKeybind(tostring(Config.Keybind):gsub("Enum.KeyCode.", ""), function(Key)
+	Config.Keybind = Enum.KeyCode[Key]
+end)
+Toggle3:SetState(true)
+
+local Colorpicker3 = Section3:CreateColorpicker("UI Color", function(Color)
+	Window:ChangeColor(Color)
+end)
+Colorpicker3:UpdateColor(Config.Color)
+
+-- credits to jan for patterns
+local Dropdown3 = Section4:CreateDropdown("Image", {"Default","Hearts","Abstract","Hexagon","Circles","Lace With Flowers","Floral"}, function(Name)
+	if Name == "Default" then
+		Window:SetBackground("2151741365")
+	elseif Name == "Hearts" then
+		Window:SetBackground("6073763717")
+	elseif Name == "Abstract" then
+		Window:SetBackground("6073743871")
+	elseif Name == "Hexagon" then
+		Window:SetBackground("6073628839")
+	elseif Name == "Circles" then
+		Window:SetBackground("6071579801")
+	elseif Name == "Lace With Flowers" then
+		Window:SetBackground("6071575925")
+	elseif Name == "Floral" then
+		Window:SetBackground("5553946656")
+	end
+end)
+Dropdown3:SetOption("Default")
+
+local Colorpicker4 = Section4:CreateColorpicker("Color", function(Color)
+	Window:SetBackgroundColor(Color)
+end)
+Colorpicker4:UpdateColor(Color3.new(1,1,1))
+
+local Slider3 = Section4:CreateSlider("Transparency",0,1,nil,false, function(Value)
+	Window:SetBackgroundTransparency(Value)
+end)
+Slider3:SetValue(0)
+
+local Slider4 = Section4:CreateSlider("Tile Scale",0,1,nil,false, function(Value)
+	Window:SetTileScale(Value)
+end)
+Slider4:SetValue(0.5)
+
+task.spawn(function()
+    while task.wait() do
+        if AutoFarm then
+            CollectMoney()
+            PressButton()
+        end
+    end
+end)
