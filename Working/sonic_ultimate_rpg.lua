@@ -25,7 +25,7 @@ for i,v in pairs(Rings) do
     if not v:IsA("BasePart") then continue end
     
     v:GetPropertyChangedSignal("Transparency"):Connect(function()
-        if v.Transparency == 0 and LoopCollectRings then
+        if v.Transparency == 0 and LoopCollectRings or NoDrain then
             CollectRing(v)
         end
     end)
@@ -84,6 +84,10 @@ Section1:CreateButton("Collect All Chaos Emeralds", CollectEmeralds)
 
 Section1:CreateToggle("No ring drain", nil, function(State)
     NoDrain = State
+
+	if State == true then
+        CollectAllRings()
+    end
 end)
 
 Section1:CreateToggle("Loop Collect All Rings", nil, function(State)
