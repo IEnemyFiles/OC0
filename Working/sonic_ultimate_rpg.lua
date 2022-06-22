@@ -1,13 +1,17 @@
+repeat task.wait() until game:IsLoaded()
+
 getgenv().NoDrain = false
 getgenv().LoopCollectRings = false
 
-local ringsCount = game:GetService("Players").Uselimit.PlayerGui.HUD.Rings.Counter
+local LocalPlayer = game:GetService("Players").LocalPlayer
 
-game:GetService("Players").Uselimit.PlayerScripts.RingsController.RingHitSound.Volume = 0
+local ringsCount = LocalPlayer.PlayerGui.HUD.Rings.Counter
+
+LocalPlayer.PlayerScripts.RingsController.RingHitSound.Volume = 0
 
 function CollectRing(Ring)
     if Ring:IsA("Part") and Ring.Transparency == 0  then
-        firetouchinterest(Ring, game.Players.LocalPlayer.Character.HumanoidRootPart, 0)
+        firetouchinterest(Ring, LocalPlayer.Character.HumanoidRootPart, 0)
         
         return true
     end
@@ -55,14 +59,14 @@ function CollectEmeralds()
     for i,v in pairs(game:GetService("Workspace").ChaosEmeralds:GetChildren()) do
         if v:IsA("MeshPart") then
             print(v)
-            firetouchinterest(v, game.Players.LocalPlayer.Character.HumanoidRootPart, 0)
+            firetouchinterest(v, LocalPlayer.Character.HumanoidRootPart, 0)
         end
     end
 end
 
 local Config = {
     WindowName = "Sonic Ultimate RPG",
-	Color = Color3.fromRGB(255,128,64),
+	Color = Color3.fromRGB(64, 89, 148),
 	Keybind = Enum.KeyCode.RightBracket
 }
 
@@ -90,13 +94,12 @@ Section1:CreateToggle("Loop Collect All Rings", nil, function(State)
     end
 end)
 
-local Toggle3 = Section3:CreateToggle("UI Toggle", nil, function(State)
+local Toggle3 = Section3:CreateToggle("UI Toggle", true, function(State)
 	Window:Toggle(State)
 end)
 Toggle3:CreateKeybind(tostring(Config.Keybind):gsub("Enum.KeyCode.", ""), function(Key)
 	Config.Keybind = Enum.KeyCode[Key]
 end)
-Toggle3:SetState(true)
 
 local Colorpicker3 = Section3:CreateColorpicker("UI Color", function(Color)
 	Window:ChangeColor(Color)
