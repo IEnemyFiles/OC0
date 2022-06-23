@@ -39,18 +39,20 @@ function CollectAllRings()
     end
 end
 
-for i,v in pairs(getgc()) do
-    if type(v) == "function" and islclosure(v) and not is_synapse_function(v) then
-        local consts = getconstants(v)
-        if table.find(consts, "math") and table.find(consts, "clamp") and table.find(consts, "Text") and table.find(consts, "None") then
-            local old
-            old = hookfunction(v, function(...)
-                if NoDrain then
-                    return
-                elseif NoDrain == false then
-                    old(...)
-                end
-            end)
+if syn ~= nil then
+    for i,v in pairs(getgc()) do
+        if type(v) == "function" and islclosure(v) and not is_synapse_function(v) then
+            local consts = getconstants(v)
+            if table.find(consts, "math") and table.find(consts, "clamp") and table.find(consts, "Text") and table.find(consts, "None") then
+                local old
+                old = hookfunction(v, function(...)
+                    if NoDrain then
+                        return
+                    elseif NoDrain == false then
+                        old(...)
+                    end
+                end)
+            end
         end
     end
 end
