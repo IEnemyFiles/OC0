@@ -18,7 +18,6 @@ getgenv().BoatSpeed = Vector3.new(0, 0, -10)
 getgenv().ModifyBoatSpeed = false
 getgenv().NoSlowdown = false
 getgenv().AutoSell = false
-getgenv().LayerId = 1
 getgenv().ZoneId = 1
 
 local SlowdownValue = LocalPlayer:WaitForChild("PlayerScripts"):WaitForChild("Client"):WaitForChild("Controllers"):WaitForChild("Boat"):WaitForChild("SlowdownPercent")
@@ -52,18 +51,21 @@ local TrashValue = LocalPlayer.PlayerScripts.Client.Controllers:WaitForChild("Tr
 
 function CollectTrash()
     if BoatController.CurrentBoat then
-        local Path = ZoneId and LayerId and LayerId ~= "All" and game:GetService("Workspace").ActiveTrash["Zone"..ZoneId]["Layer"..LayerId]:GetChildren() or game:GetService("Workspace").ActiveTrash["Zone"..ZoneId]:GetDescendants()
+        local Zone = game:GetService("Workspace").ActiveTrash:FindFirstChild("Zone"..ZoneId)
+        if Zone then
+            local Path = Zone:GetDescendants()
 
-        for i,v in pairs(Path) do
-            if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then return end
-
-            if v:IsA("MeshPart") then
-                if v:GetAttribute("Active") == true then
-                    BoatController.CurrentBoat.CFrame = CFrame.new(v.Position) * CFrame.new(0, 1, 0)
-                    RunService.Heartbeat:Wait()
-                    CollectController:AddCollection(v)
-                else
-                    v.Transparency = 1
+            for i,v in pairs(Path) do
+                if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then return end
+    
+                if v:IsA("MeshPart") then
+                    if v:GetAttribute("Active") == true then
+                        BoatController.CurrentBoat.CFrame = CFrame.new(v.Position) * CFrame.new(0, 1, 0)
+                        RunService.Heartbeat:Wait()
+                        CollectController:AddCollection(v)
+                    else
+                        v.Transparency = 1
+                    end
                 end
             end
         end
@@ -91,7 +93,7 @@ end)
 
 task.spawn(function()
     while true do
-        if AutoCollect and not Selling then
+        if AutoCollect then
             if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
                 SellTrash()
             else
@@ -100,12 +102,10 @@ task.spawn(function()
                 if TrashValue.Value > 0 then
                     SellTrash()
                 end
-
-                task.wait(1)
             end
         end
 
-        task.wait(1)
+        task.wait(0.5)
     end
 end)
 
@@ -178,10 +178,6 @@ end)
 
 Section2:CreateDropdown("Collect Zone", {1,2,3,4,5,6}, function(Value)
 	ZoneId = Value
-end)
-
-Section2:CreateDropdown("Collect Layer", {1, 2, 3, "All"}, function(Value)
-	LayerId = Value
 end)
 
 Section2:CreateButton("Sell Trash", SellTrash)
