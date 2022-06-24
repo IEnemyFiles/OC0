@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local BoatController = Knit.GetController("BoatController")
 local CollectController = Knit.GetController("CollectController")
+local TrashService = Knit.GetService("TrashService")
 local ControlModule = BoatController.ControlModule
 
 local LocalPlayer = Players.LocalPlayer
@@ -69,24 +70,10 @@ function CollectTrash()
     end
 end
 
-local Selling, Timeout = nil, 10
-
 function SellTrash()
-    local CurrentBoat = BoatController.CurrentBoat
-
-    if CurrentBoat then
-        local ClosestSellPart = GetClosestPartInFolder(game:GetService("Workspace").SellParts)
-
-        if ClosestSellPart then
-            Selling = true
-            CurrentBoat.CFrame = CFrame.new(ClosestSellPart.Position) * CFrame.new(0, 3, -5)
-            
-            local start = os.clock()
-            repeat
-                task.wait(1)
-            until TrashValue.Value == 0 or (os.clock() - start) >= Timeout
-            Selling = false
-        end
+    for i = 1, 5 do
+        TrashService:Sell()
+        task.wait(0.3)
     end
 end
 
@@ -189,11 +176,11 @@ Section2:CreateToggle("Auto Collect Trash", false, function(State)
     AutoCollect = State
 end)
 
-Section2:CreateDropdown("Auto Collect Zone", {1,2,3,4,5,6}, function(Value)
+Section2:CreateDropdown("Collect Zone", {1,2,3,4,5,6}, function(Value)
 	ZoneId = Value
 end)
 
-Section2:CreateDropdown("Auto Collect Layer", {1, 2, 3, "All"}, function(Value)
+Section2:CreateDropdown("Collect Layer", {1, 2, 3, "All"}, function(Value)
 	LayerId = Value
 end)
 
