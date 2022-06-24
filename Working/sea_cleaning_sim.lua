@@ -7,6 +7,7 @@ repeat task.wait() until game:IsLoaded() and Knit.OnStart()._status == "Resolved
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local BoatController = Knit.GetController("BoatController")
+local CollectController = Knit.GetController("CollectController")
 local ControlModule = BoatController.ControlModule
 
 local LocalPlayer = Players.LocalPlayer
@@ -16,6 +17,7 @@ getgenv().BoatSpeed = Vector3.new(0, 0, -10)
 getgenv().ModifyBoatSpeed = false
 getgenv().NoSlowdown = false
 getgenv().AutoSell = false
+getgenv().LayerId = 1
 
 local SlowdownValue = LocalPlayer:WaitForChild("PlayerScripts"):WaitForChild("Client"):WaitForChild("Controllers"):WaitForChild("Boat"):WaitForChild("SlowdownPercent")
 
@@ -44,6 +46,16 @@ function GetClosestPartInFolder(Folder)
     return closestPart, distance
 end
 
+function CollectTrash()
+    if BoatController.CurrentBoat then
+        for i,v in pairs(game:GetService("Workspace").ActiveTrash.Zone1["Layer"..LayerId]:GetChildren()) do
+            BoatController.CurrentBoat.CFrame = CFrame.new(v.Position)
+            RunService.Heartbeat:Wait()
+            CollectController:AddCollection(v)
+        end
+    end
+end
+
 function SellTrash()
     local CurrentBoat = BoatController.CurrentBoat
 
@@ -56,12 +68,32 @@ function SellTrash()
     end
 end
 
+function UpgradeBoat()
+    game:GetService("ReplicatedStorage").Packages.Knit.Services.BoatService.RF.Upgrade:InvokeServer()
+end
+
 local TrashValue = LocalPlayer.PlayerScripts.Client.Controllers:WaitForChild("Trash"):WaitForChild("Trash")
 TrashValue.Changed:Connect(function(newValue)
     if AutoSell == false then return end
 
     if newValue >= LocalPlayer:GetAttribute("MaxTrash") then
         SellTrash()
+    end
+end)
+
+task.spawn(function()
+    while true do
+        if AutoCollect then
+            if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
+                SellTrash()
+            else
+                CollectTrash()
+                SellTrash()
+                task.wait(1)
+            end
+        end
+
+        task.wait(1)
     end
 end)
 
@@ -98,7 +130,7 @@ local Tab1 = Window:CreateTab("Main")
 local Tab2 = Window:CreateTab("UI Settings")
 
 local Section1 = Tab1:CreateSection("Boat Tinkering")
-local Section2 = Tab1:CreateSection("Other")
+local Section2 = Tab1:CreateSection("Trash Related")
 local Section3 = Tab2:CreateSection("Menu")
 local Section4 = Tab2:CreateSection("Background")
 
@@ -114,11 +146,27 @@ Section1:CreateToggle("Modify Boat Speed", nil, function(State)
     ModifyBoatSpeed = State
 end)
 
+Section1:CreateButton("Upgrade Boat", UpgradeBoat)
+
 Section2:CreateToggle("Auto Sell Trash", false, function(State)
+    if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
+        SellTrash()
+    end
+
     AutoSell = State
 end)
 
+Section2:CreateToggle("Auto Collect Trash", false, function(State)
+    if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
+        SellTrash()
+    end
+
+    AutoCollect = State
+end)
+
 Section2:CreateButton("Sell Trash", SellTrash)
+
+Section2:CreateButton("Collect Trash", CollectTrash)
 
 local Toggle3 = Section3:CreateToggle("UI Toggle", true, function(State)
 	Window:Toggle(State)
