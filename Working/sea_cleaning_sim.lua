@@ -165,46 +165,17 @@ Section2:CreateToggle("Auto Collect Trash", false, function(State)
     AutoCollect = State
 end)
 
-Section1:CreateSlider("Zone", 1,6,1,false, function(Value)
+Section1:CreateDropdown("Zone", {1,2,3,4,5,6}, function(Value)
 	ZoneId = Value
 end)
 
-Section1:CreateSlider("Layer", 1,3,1,false, function(Value)
+Section1:CreateDropdown("Layer", {1,2,3}, function(Value)
 	LayerId = Value
 end)
 
 Section2:CreateButton("Sell Trash", SellTrash)
 
 Section2:CreateButton("Collect Trash", CollectTrash)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 local Toggle3 = Section3:CreateToggle("UI Toggle", true, function(State)
 	Window:Toggle(State)
