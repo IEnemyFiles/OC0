@@ -58,7 +58,7 @@ function CollectTrash()
 
             if v:IsA("MeshPart") then
                 if v:GetAttribute("Active") == true then
-                    BoatController.CurrentBoat.CFrame = CFrame.new(v.Position)
+                    BoatController.CurrentBoat.CFrame = CFrame.new(v.Position) * CFrame.new(0, 1, 0)
                     RunService.Heartbeat:Wait()
                     CollectController:AddCollection(v)
                 else
@@ -79,7 +79,7 @@ function SellTrash()
 
         if ClosestSellPart then
             Selling = true
-            CurrentBoat.CFrame = CFrame.new(ClosestSellPart.Position)
+            CurrentBoat.CFrame = CFrame.new(ClosestSellPart.Position) * CFrame.new(0, 3, -5)
             
             local start = os.clock()
             repeat
