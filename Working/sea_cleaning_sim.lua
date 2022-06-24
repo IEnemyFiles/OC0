@@ -47,15 +47,29 @@ function GetClosestPartInFolder(Folder)
     return closestPart, distance
 end
 
+local TrashValue = LocalPlayer.PlayerScripts.Client.Controllers:WaitForChild("Trash"):WaitForChild("Trash")
+
 function CollectTrash()
     if BoatController.CurrentBoat then
-        for i,v in pairs(game:GetService("Workspace").ActiveTrash["Zone"..ZoneId]["Layer"..LayerId]:GetChildren()) do
-            BoatController.CurrentBoat.CFrame = CFrame.new(v.Position)
-            RunService.Heartbeat:Wait()
-            CollectController:AddCollection(v)
+        local Path = ZoneId and LayerId and LayerId ~= "All" and game:GetService("Workspace").ActiveTrash["Zone"..ZoneId]["Layer"..LayerId]:GetChildren() or game:GetService("Workspace").ActiveTrash["Zone"..ZoneId]:GetDescendants()
+
+        for i,v in pairs(Path) do
+            if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then return end
+
+            if v:IsA("MeshPart") then
+                if v:GetAttribute("Active") == true then
+                    BoatController.CurrentBoat.CFrame = CFrame.new(v.Position)
+                    RunService.Heartbeat:Wait()
+                    CollectController:AddCollection(v)
+                else
+                    v.Transparency = 1
+                end
+            end
         end
     end
 end
+
+local Selling, Timeout = nil, 10
 
 function SellTrash()
     local CurrentBoat = BoatController.CurrentBoat
@@ -64,7 +78,14 @@ function SellTrash()
         local ClosestSellPart = GetClosestPartInFolder(game:GetService("Workspace").SellParts)
 
         if ClosestSellPart then
+            Selling = true
             CurrentBoat.CFrame = CFrame.new(ClosestSellPart.Position)
+            
+            local start = os.clock()
+            repeat
+                task.wait(1)
+            until TrashValue.Value == 0 or (os.clock() - start) >= Timeout
+            Selling = false
         end
     end
 end
@@ -73,7 +94,6 @@ function UpgradeBoat()
     game:GetService("ReplicatedStorage").Packages.Knit.Services.BoatService.RF.Upgrade:InvokeServer()
 end
 
-local TrashValue = LocalPlayer.PlayerScripts.Client.Controllers:WaitForChild("Trash"):WaitForChild("Trash")
 TrashValue.Changed:Connect(function(newValue)
     if AutoSell == false then return end
 
@@ -84,12 +104,16 @@ end)
 
 task.spawn(function()
     while true do
-        if AutoCollect then
+        if AutoCollect and not Selling then
             if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
                 SellTrash()
             else
                 CollectTrash()
-                SellTrash()
+                
+                if TrashValue.Value > 0 then
+                    SellTrash()
+                end
+
                 task.wait(1)
             end
         end
@@ -165,17 +189,46 @@ Section2:CreateToggle("Auto Collect Trash", false, function(State)
     AutoCollect = State
 end)
 
-Section1:CreateDropdown("Zone", {1,2,3,4,5,6}, function(Value)
+Section2:CreateDropdown("Auto Collect Zone", {1,2,3,4,5,6}, function(Value)
 	ZoneId = Value
 end)
 
-Section1:CreateDropdown("Layer", {1,2,3}, function(Value)
+Section2:CreateDropdown("Auto Collect Layer", {1, 2, 3, "All"}, function(Value)
 	LayerId = Value
 end)
 
 Section2:CreateButton("Sell Trash", SellTrash)
 
 Section2:CreateButton("Collect Trash", CollectTrash)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 local Toggle3 = Section3:CreateToggle("UI Toggle", true, function(State)
 	Window:Toggle(State)
