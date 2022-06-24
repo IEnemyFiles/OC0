@@ -18,6 +18,7 @@ getgenv().ModifyBoatSpeed = false
 getgenv().NoSlowdown = false
 getgenv().AutoSell = false
 getgenv().LayerId = 1
+getgenv().ZoneId = 1
 
 local SlowdownValue = LocalPlayer:WaitForChild("PlayerScripts"):WaitForChild("Client"):WaitForChild("Controllers"):WaitForChild("Boat"):WaitForChild("SlowdownPercent")
 
@@ -48,7 +49,7 @@ end
 
 function CollectTrash()
     if BoatController.CurrentBoat then
-        for i,v in pairs(game:GetService("Workspace").ActiveTrash.Zone1["Layer"..LayerId]:GetChildren()) do
+        for i,v in pairs(game:GetService("Workspace").ActiveTrash["Zone"..ZoneId]["Layer"..LayerId]:GetChildren()) do
             BoatController.CurrentBoat.CFrame = CFrame.new(v.Position)
             RunService.Heartbeat:Wait()
             CollectController:AddCollection(v)
@@ -164,9 +165,46 @@ Section2:CreateToggle("Auto Collect Trash", false, function(State)
     AutoCollect = State
 end)
 
+Section1:CreateSlider("Zone", 1,6,1,false, function(Value)
+	ZoneId = Value
+end)
+
+Section1:CreateSlider("Layer", 1,3,1,false, function(Value)
+	LayerId = Value
+end)
+
 Section2:CreateButton("Sell Trash", SellTrash)
 
 Section2:CreateButton("Collect Trash", CollectTrash)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 local Toggle3 = Section3:CreateToggle("UI Toggle", true, function(State)
 	Window:Toggle(State)
