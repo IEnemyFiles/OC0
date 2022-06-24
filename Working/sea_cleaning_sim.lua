@@ -29,7 +29,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-function GetClosestPartInFolder(Folder)
+function GetClosestPartInTable(Folder)
     local closestPart, distance
 
     for index, value in ipairs(Folder:GetChildren()) do
@@ -50,26 +50,28 @@ end
 local TrashValue = LocalPlayer.PlayerScripts.Client.Controllers:WaitForChild("Trash"):WaitForChild("Trash")
 
 function CollectTrash()
-    if BoatController.CurrentBoat then
-        local Zone = game:GetService("Workspace").ActiveTrash:FindFirstChild("Zone"..ZoneId)
-        if Zone then
-            local Path = Zone:GetDescendants()
+    LocalPlayer:SetAttribute("Dismounting", true)
 
-            for i,v in pairs(Path) do
-                if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then return end
-    
-                if v:IsA("MeshPart") then
-                    if v:GetAttribute("Active") == true then
-                        BoatController.CurrentBoat.CFrame = CFrame.new(v.Position) * CFrame.new(0, 1, 0)
-                        RunService.Heartbeat:Wait()
-                        CollectController:AddCollection(v)
-                    else
-                        v.Transparency = 1
-                    end
+    local Zone = game:GetService("Workspace").ActiveTrash:FindFirstChild("Zone"..ZoneId)
+    if Zone then
+        local Path = Zone:GetDescendants()
+
+        for i,v in pairs(Path) do
+            if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") or BoatController.CurrentBoat == nil then return end
+
+            if v:IsA("MeshPart") then
+                if v:GetAttribute("Active") == true then
+                    BoatController.CurrentBoat.CFrame = CFrame.new(v.Position) * CFrame.new(0, 1, 0)
+                    RunService.Heartbeat:Wait()
+                    CollectController:AddCollection(v)
+                else
+                    v.Transparency = 1
                 end
             end
         end
     end
+
+    game:GetService("Players").LocalPlayer:SetAttribute("Dismounting", false)
 end
 
 function SellTrash()
@@ -94,6 +96,8 @@ end)
 task.spawn(function()
     while true do
         if AutoCollect then
+            LocalPlayer:SetAttribute("Dismounting", true)
+
             if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
                 SellTrash()
             else
@@ -103,6 +107,8 @@ task.spawn(function()
                     SellTrash()
                 end
             end
+        else
+            LocalPlayer:SetAttribute("Dismounting", false)
         end
 
         task.wait(0.5)
@@ -183,35 +189,6 @@ end)
 Section2:CreateButton("Sell Trash", SellTrash)
 
 Section2:CreateButton("Collect Trash", CollectTrash)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 local Toggle3 = Section3:CreateToggle("UI Toggle", true, function(State)
 	Window:Toggle(State)
