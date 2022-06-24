@@ -76,7 +76,7 @@ end
 
 function SellTrash()
     for i = 1, 5 do
-        TrashService:Sell()
+        game:GetService("ReplicatedStorage").Packages.Knit.Services.TrashService.RF.Sell:InvokeServer()
         task.wait(0.3)
     end
 end
@@ -114,6 +114,12 @@ task.spawn(function()
         task.wait(0.5)
     end
 end)
+
+function SpawnBoat()
+    task.spawn(function()
+        game:GetService("ReplicatedStorage").Packages.Knit.Services.BoatService.RF.Create:InvokeServer(LocalPlayer.Character.HumanoidRootPart.CFrame)
+    end)
+end
 
 RunService.RenderStepped:Connect(function()
     if ModifyBoatSpeed == false then return end
@@ -166,6 +172,8 @@ end)
 
 Section1:CreateButton("Upgrade Boat", UpgradeBoat)
 
+Section1:CreateButton("Spawn Boat", SpawnBoat)
+
 Section2:CreateToggle("Auto Sell Trash", false, function(State)
     if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
         SellTrash()
@@ -189,6 +197,35 @@ end)
 Section2:CreateButton("Sell Trash", SellTrash)
 
 Section2:CreateButton("Collect Trash", CollectTrash)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 local Toggle3 = Section3:CreateToggle("UI Toggle", true, function(State)
 	Window:Toggle(State)
