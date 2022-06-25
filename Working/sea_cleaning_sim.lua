@@ -14,17 +14,25 @@ local ControlModule = BoatController.ControlModule
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-getgenv().BoatSpeed = Vector3.new(0, 0, -10)
-getgenv().ModifyBoatSpeed = false
-getgenv().NoSlowdown = false
-getgenv().AutoSell = false
-getgenv().ZoneId = 1
+getgenv().Settings = {
+    BoatSpeed = Vector3.new(0, 0, -10),
+    ModifyBoatSpeed = false,
+    NoSlowdown = false,
+    AutoSell = false,
+    AutoCollect = false,
+    AutoCollectGems = false,
+    ForceStop = false,
+    ZoneId = 1,
+    CollectionDelay = 0,
+    Dismounting = false
+}
+
 
 local SlowdownValue = LocalPlayer:WaitForChild("PlayerScripts"):WaitForChild("Client"):WaitForChild("Controllers"):WaitForChild("Boat"):WaitForChild("SlowdownPercent")
 
 SlowdownValue.Value = 100
 RunService.RenderStepped:Connect(function()
-    if NoSlowdown or ModifyBoatSpeed then
+    if Settings.NoSlowdown or Settings.ModifyBoatSpeed then
         SlowdownValue.Value = 100
     end
 end)
@@ -49,44 +57,123 @@ end
 
 local TrashValue = LocalPlayer.PlayerScripts.Client.Controllers:WaitForChild("Trash"):WaitForChild("Trash")
 
-function CollectTrash()
-    LocalPlayer:SetAttribute("Dismounting", true)
+function waitt()
+    if Settings.CollectionDelay == 0 then
+        RunService.Heartbeat:Wait()
+    elseif Settings.CollectionDelay > 0 then
+        task.wait(Settings.CollectionDelay)
+    end
+end
 
-    local Zone = game:GetService("Workspace").ActiveTrash:FindFirstChild("Zone"..ZoneId)
+function NoClipBoat()
+    local connection = RunService.Heartbeat:Connect(function(deltaTime)
+        if BoatController.CurrentBoat then
+            BoatController.CurrentBoat.Anchored = true
+            BoatController.CurrentBoat.CanCollide = false
+        end
+    end)
+
+    return connection
+end
+
+function CollectTrash()
+    local Zone = game:GetService("Workspace").ActiveTrash:FindFirstChild("Zone"..Settings.ZoneId)
     if Zone then
         local Path = Zone:GetDescendants()
 
+        local NoClipBoat = NoClipBoat()
+
         for i,v in pairs(Path) do
-            if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") or BoatController.CurrentBoat == nil then return end
+            if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") or BoatController.CurrentBoat == nil or Settings.ForceStop then
+                if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
+                    SellTrash()
+                    return
+                end
+
+                continue 
+            end
 
             if v:IsA("MeshPart") then
-                if v:GetAttribute("Active") == true then
-                    BoatController.CurrentBoat.CFrame = CFrame.new(v.Position) * CFrame.new(0, 1, 0)
-                    RunService.Heartbeat:Wait()
-                    CollectController:AddCollection(v)
-                else
-                    v.Transparency = 1
+                if v:GetAttribute("Active") == true and v.Transparency ~= 1 and v.CanTouch == true then
+                    local startClock = os.clock()
+
+                    repeat
+                        LocalPlayer.PlayerScripts.Client.Controllers.Boat.ForwardAmount.Value = 1
+                        BoatController.CurrentBoat.CFrame = CFrame.new(v.Position)
+                        TrashService.HandlePickup._re:FireServer(v)
+                        RunService.Heartbeat:Wait()
+                        v:SetAttribute("Damage", 999)
+                    until TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") or not v or v:GetAttribute("Active") == false or v:GetAttribute("IsCollecting") or v.Transparency == 1 or v.CanTouch == false or (os.clock() - startClock) >= 1
                 end
+                
+                waitt()
             end
         end
-    end
 
-    game:GetService("Players").LocalPlayer:SetAttribute("Dismounting", false)
+        if Settings.ForceStop then
+            Settings.ForceStop = false
+        end
+
+        NoClipBoat:Disconnect()
+    end
 end
 
 function SellTrash()
-    for i = 1, 5 do
-        game:GetService("ReplicatedStorage").Packages.Knit.Services.TrashService.RF.Sell:InvokeServer()
-        task.wait(0.3)
+    task.spawn(function()
+        repeat
+            game:GetService("ReplicatedStorage").Packages.Knit.Services.TrashService.RF.Sell:InvokeServer()
+            task.wait(0.3)
+        until TrashValue.Value <= 100
+    end)
+end
+
+function CollectGem(Gem)
+    if Settings.ForceStop then return end
+
+    local CurrentBoat = BoatController.CurrentBoat
+
+    if CurrentBoat then
+        CurrentBoat.CFrame = CFrame.new(Gem.Position) 
+        firetouchinterest(CurrentBoat, Gem, 0)
+        task.wait()
+        firetouchinterest(CurrentBoat, Gem, 1)
     end
 end
+
+function CollectGems()
+    for i,v in pairs(game:GetService("Workspace").Gems:GetDescendants()) do
+        if Settings.ForceStop then return end
+
+        if v.Name == "Gem" then
+            CollectGem(v)
+        end
+    end
+
+    if Settings.ForceStop then
+        Settings.ForceStop = false
+    end
+end
+
+function ToggleDismounting(CanDismount)
+    for i,v in pairs(game:GetService("Workspace").DismountSpots:GetChildren()) do
+        v.CanTouch = CanDismount
+    end
+end
+
+game:GetService("Workspace").Gems.DescendantAdded:Connect(function(newChild)
+    if Settings.AutoCollectGems == false then return end
+
+    if newChild.Name == "Gem" then
+        CollectGem(newChild)
+    end
+end)
 
 function UpgradeBoat()
     game:GetService("ReplicatedStorage").Packages.Knit.Services.BoatService.RF.Upgrade:InvokeServer()
 end
 
 TrashValue.Changed:Connect(function(newValue)
-    if AutoSell == false then return end
+    if Settings.AutoSell == false then return end
 
     if newValue >= LocalPlayer:GetAttribute("MaxTrash") then
         SellTrash()
@@ -95,9 +182,7 @@ end)
 
 task.spawn(function()
     while true do
-        if AutoCollect then
-            LocalPlayer:SetAttribute("Dismounting", true)
-
+        if Settings.AutoCollect then
             if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
                 SellTrash()
             else
@@ -107,8 +192,6 @@ task.spawn(function()
                     SellTrash()
                 end
             end
-        else
-            LocalPlayer:SetAttribute("Dismounting", false)
         end
 
         task.wait(0.5)
@@ -122,17 +205,17 @@ function SpawnBoat()
 end
 
 RunService.RenderStepped:Connect(function()
-    if ModifyBoatSpeed == false then return end
+    if Settings.ModifyBoatSpeed == false then return end
 
     if BoatController.CurrentBoat then
         local BodyVelocity = BoatController.BodyVelocity
         
         if BodyVelocity then
             if ControlModule:GetMoveVector().Z <= -0.1 then
-                local BoatVelocity = BoatController.CurrentBoat.CFrame:VectorToWorldSpace(BoatSpeed) * Vector3.new(1, 0, 1)
+                local BoatVelocity = BoatController.CurrentBoat.CFrame:VectorToWorldSpace(Settings.BoatSpeed) * Vector3.new(1, 0, 1)
                 BodyVelocity.Velocity = BoatVelocity * 10
             elseif 0.1 <= ControlModule:GetMoveVector().Z then
-                local BoatVelocity = BoatController.CurrentBoat.CFrame:VectorToWorldSpace(-BoatSpeed) * Vector3.new(1, 0, 1)
+                local BoatVelocity = BoatController.CurrentBoat.CFrame:VectorToWorldSpace(-Settings.BoatSpeed) * Vector3.new(1, 0, 1)
                 BodyVelocity.Velocity = BoatVelocity * 10
             end
         end
@@ -159,27 +242,32 @@ local Section3 = Tab2:CreateSection("Menu")
 local Section4 = Tab2:CreateSection("Background")
 
 Section1:CreateToggle("No slowdown effect", nil, function(State)
-    NoSlowdown = State
+    Settings.NoSlowdown = State
 end)
 
 Section1:CreateSlider("Boat Speed", 0,25,10,false, function(Value)
-	BoatSpeed = Vector3.new(0, 0, -Value)
+	Settings.BoatSpeed = Vector3.new(0, 0, -Value)
 end)
 
 Section1:CreateToggle("Modify Boat Speed", nil, function(State)
-    ModifyBoatSpeed = State
+    Settings.ModifyBoatSpeed = State
 end)
 
 Section1:CreateButton("Upgrade Boat", UpgradeBoat)
 
 Section1:CreateButton("Spawn Boat", SpawnBoat)
 
+Section1:CreateToggle("Disable Dismounting", nil, function(State)
+    ToggleDismounting(not State)
+    print(not State)
+end)
+
 Section2:CreateToggle("Auto Sell Trash", false, function(State)
     if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
         SellTrash()
     end
 
-    AutoSell = State
+    Settings.AutoSell = State
 end)
 
 Section2:CreateToggle("Auto Collect Trash", false, function(State)
@@ -187,17 +275,35 @@ Section2:CreateToggle("Auto Collect Trash", false, function(State)
         SellTrash()
     end
 
-    AutoCollect = State
+    Settings.AutoCollect = State
 end)
 
+Section2:CreateSlider("Trash Collection Delay", 0, 1, 0, false, function(State)
+    Settings.CollectionDelay = State
+end)
+
+--[[Section2:CreateToggle("Auto Collect Gems", false, function(State)
+    if State then
+        CollectGems()
+    end
+
+    Settings.AutoCollectGems = State
+end)]]
+
 Section2:CreateDropdown("Collect Zone", {1,2,3,4,5,6}, function(Value)
-	ZoneId = Value
+    RP.Packages.Knit.Services.ZoneService.RF.SetZone:InvokeServer("Zone"..Value)
+	Settings.ZoneId = Value
 end)
 
 Section2:CreateButton("Sell Trash", SellTrash)
 
 Section2:CreateButton("Collect Trash", CollectTrash)
 
+--Section2:CreateButton("Collect Gems", CollectGems)
+
+Section2:CreateButton("Force Stop", function()
+    Settings.ForceStop = true
+end)
 
 
 
