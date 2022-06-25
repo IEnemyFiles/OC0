@@ -65,23 +65,14 @@ function waitt()
     end
 end
 
-function NoClipBoat()
-    local connection = RunService.Heartbeat:Connect(function(deltaTime)
-        if BoatController.CurrentBoat then
-            BoatController.CurrentBoat.Anchored = true
-            BoatController.CurrentBoat.CanCollide = false
-        end
-    end)
-
-    return connection
-end
-
 function CollectTrash()
     local Zone = game:GetService("Workspace").ActiveTrash:FindFirstChild("Zone"..Settings.ZoneId)
     if Zone then
         local Path = Zone:GetDescendants()
-
-        local NoClipBoat = NoClipBoat()
+        
+        if BoatController.CurrentBoat then
+            BoatController.CurrentBoat.Anchored = false
+        end
 
         for i,v in pairs(Path) do
             if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") or BoatController.CurrentBoat == nil or Settings.ForceStop then
@@ -114,7 +105,9 @@ function CollectTrash()
             Settings.ForceStop = false
         end
 
-        NoClipBoat:Disconnect()
+        if BoatController.CurrentBoat then
+            BoatController.CurrentBoat.Anchored = false
+        end
     end
 end
 
