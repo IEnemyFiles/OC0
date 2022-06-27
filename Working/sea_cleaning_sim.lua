@@ -65,6 +65,8 @@ function waitt()
     end
 end
 
+local Selling = false
+
 function CollectTrash()
     local Zone = game:GetService("Workspace").ActiveTrash:FindFirstChild("Zone"..Settings.ZoneId)
     if Zone then
@@ -75,7 +77,8 @@ function CollectTrash()
         end
 
         for i,v in pairs(Path) do
-            if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") or BoatController.CurrentBoat == nil or Settings.ForceStop then
+            ToggleDismounting(false)
+            if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") or BoatController.CurrentBoat == nil or Settings.ForceStop or Selling then
                 if TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") then
                     SellTrash()
                     return
@@ -88,13 +91,14 @@ function CollectTrash()
                 if v:GetAttribute("Active") == true and v.Transparency ~= 1 and v.CanTouch == true then
                     local startClock = os.clock()
 
-                    repeat
-                        LocalPlayer.PlayerScripts.Client.Controllers.Boat.ForwardAmount.Value = 1
-                        BoatController.CurrentBoat.CFrame = CFrame.new(v.Position)
-                        TrashService.HandlePickup._re:FireServer(v)
-                        RunService.Heartbeat:Wait()
-                        v:SetAttribute("Damage", 999)
-                    until TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") or not v or v:GetAttribute("Active") == false or v:GetAttribute("IsCollecting") or v.Transparency == 1 or v.CanTouch == false or (os.clock() - startClock) >= 1
+                    pcall(function()
+                        repeat
+                            LocalPlayer.PlayerScripts.Client.Controllers.Boat.ForwardAmount.Value = 1
+                            BoatController.CurrentBoat.CFrame = CFrame.new(v.Position)
+                            TrashService.HandlePickup._re:FireServer(v)
+                            RunService.Heartbeat:Wait()
+                        until TrashValue.Value >= LocalPlayer:GetAttribute("MaxTrash") or not v or v.Transparency == 1 or v.CanTouch == false or v:GetAttribute("Active") == false or v:GetAttribute("IsCollecting") or (os.clock() - startClock) >= 0.5 or Settings.ForceStop
+                    end)
                 end
                 
                 waitt()
@@ -112,24 +116,44 @@ function CollectTrash()
 end
 
 function SellTrash()
-    task.spawn(function()
-        repeat
-            game:GetService("ReplicatedStorage").Packages.Knit.Services.TrashService.RF.Sell:InvokeServer()
-            task.wait(0.3)
-        until TrashValue.Value <= 100
-    end)
+    local CurrentBoat = BoatController.CurrentBoat
+
+    if CurrentBoat then
+        local ClosestSellPart = GetClosestPartInTable(game:GetService("Workspace").SellParts)
+
+        if ClosestSellPart then
+            Selling = true
+            local oldCFrame = CurrentBoat.CFrame
+            local start = os.clock()
+            repeat
+                CurrentBoat.CFrame = ClosestSellPart.CFrame:ToWorldSpace(CFrame.new(5, 0, 25)) * CFrame.Angles(0, 0, math.rad(-90))
+                CurrentBoat.CFrame = ClosestSellPart.CFrame:ToWorldSpace(CFrame.new(5, 0, 25)) * CFrame.Angles(0, 0, math.rad(-90))
+                RunService.Heartbeat:Wait()
+            until TrashValue.Value == 0 or Settings.ForceStop-- or (os.clock() - start) >= Timeout
+            Selling = false
+            CurrentBoat.CFrame = oldCFrame
+        end
+    end
 end
 
 function CollectGem(Gem)
     if Settings.ForceStop then return end
 
     local CurrentBoat = BoatController.CurrentBoat
+    local oldCFrame = CurrentBoat.CFrame
 
     if CurrentBoat then
-        CurrentBoat.CFrame = CFrame.new(Gem.Position) 
-        firetouchinterest(CurrentBoat, Gem, 0)
-        task.wait()
-        firetouchinterest(CurrentBoat, Gem, 1)
+        local cf = CFrame.new(Gem.Position)
+
+        for i = 1, 10 do
+            if Gem then
+                CurrentBoat.CFrame = cf
+                firetouchinterest(CurrentBoat, Gem, 0)
+                task.wait()
+                firetouchinterest(CurrentBoat, Gem, 1)
+            end
+        end
+        CurrentBoat.CFrame = oldCFrame
     end
 end
 
@@ -157,7 +181,7 @@ game:GetService("Workspace").Gems.DescendantAdded:Connect(function(newChild)
     if Settings.AutoCollectGems == false then return end
 
     if newChild.Name == "Gem" then
-        CollectGem(newChild)
+        CollectGems()
     end
 end)
 
@@ -252,7 +276,6 @@ Section1:CreateButton("Spawn Boat", SpawnBoat)
 
 Section1:CreateToggle("Disable Dismounting", nil, function(State)
     ToggleDismounting(not State)
-    print(not State)
 end)
 
 Section2:CreateToggle("Auto Sell Trash", false, function(State)
@@ -275,13 +298,17 @@ Section2:CreateSlider("Trash Collection Delay", 0, 1, 0, false, function(State)
     Settings.CollectionDelay = State
 end)
 
---[[Section2:CreateToggle("Auto Collect Gems", false, function(State)
+Section2:CreateToggle("Auto Collect Gems", false, function(State)
     if State then
         CollectGems()
     end
 
     Settings.AutoCollectGems = State
-end)]]
+end)
+
+for index, value in ipairs(game:GetService("Workspace").Gems:GetChildren()) do
+    RP.Packages.Knit.Services.ZoneService.RF.SetZone:InvokeServer(value.Name)
+end
 
 Section2:CreateDropdown("Collect Zone", {1,2,3,4,5,6}, function(Value)
     RP.Packages.Knit.Services.ZoneService.RF.SetZone:InvokeServer("Zone"..Value)
@@ -292,39 +319,14 @@ Section2:CreateButton("Sell Trash", SellTrash)
 
 Section2:CreateButton("Collect Trash", CollectTrash)
 
---Section2:CreateButton("Collect Gems", CollectGems)
+Section2:CreateButton("Collect Gems", CollectGems)
 
 Section2:CreateButton("Force Stop", function()
     Settings.ForceStop = true
+    task.delay(2, function()
+        Settings.ForceStop = false
+    end)
 end)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 local Toggle3 = Section3:CreateToggle("UI Toggle", true, function(State)
 	Window:Toggle(State)
