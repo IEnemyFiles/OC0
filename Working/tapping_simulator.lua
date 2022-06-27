@@ -187,6 +187,21 @@ ModeDropdown = Section2:AddDropdown({
 	})
 ModeDropdown:Set("Normal Hatch")
 
+for i,v in pairs(EggList) do
+	if string.find(v, "Robux") then
+		table.remove(EggList, i)
+	end
+end
+
+local EggSelectDropdown = Section2:CreateDropdown({
+	Name = "Egg to open", 
+	List = EggList, 
+	Callback = function(State)
+		Settings.AutoHatch.Name = State
+	end
+})
+EggSelectDropdown:Set("Starter")
+
 local RebirthAmounts = GetRebirthButtons()
 local newRebirthAmounts = {}
 for index, value in ipairs(RebirthAmounts) do
@@ -217,12 +232,3 @@ Section2:CreateButton({
 		RebirthAmountDropdown:Set(1)
 	end
 })
-
-local EggSelectDropdown = Section2:CreateDropdown({
-	Name = "Egg to open", 
-	List = EggList, 
-	Callback = function(State)
-		Settings.AutoHatch.Name = State
-	end
-})
-EggSelectDropdown:Set("Starter")
