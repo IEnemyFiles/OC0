@@ -1,6 +1,6 @@
 _G.Settings = {
     ["AutoPushups"] = false,
-    ["AutoMeditation"] = false,
+    ["MeditationAmount"] = 1000,
 }
 
 local LocalPlayer = game.Players.LocalPlayer
@@ -26,7 +26,7 @@ function AutoPushups()
 end
 
 function AutoMeditation()
-    for i = 1, 100 do
+    for i = 1, _G.Settings.MeditationAmount do
         Character.Character.input:FireServer("M", false)
     end
 end
@@ -47,5 +47,8 @@ win:Button("Mass Meditate", function()
     pcall(AutoMeditation) 
 end)
 
-
-
+win:Box("Amount", function(text, focuslost)
+   if focuslost and tonumber(text) and tonumber(text) > 0 then
+       _G.Settings.MeditationAmount = tonumber(text)
+   end
+end)
