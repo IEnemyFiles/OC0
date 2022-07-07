@@ -1,5 +1,6 @@
 _G.Settings = {
-    ["AutoPushups"] = false
+    ["AutoPushups"] = false,
+    ["AutoMeditation"] = false,
 }
 
 local LocalPlayer = game.Players.LocalPlayer
@@ -10,7 +11,7 @@ function AutoPushups()
         if _G.Settings.AutoPushups == false then break end
         
         if not LocalPlayer.PlayerGui:FindFirstChild("PushupsGui") then
-            Character.Character.input:FireServer("J", spawn)
+            Character.Character.input:FireServer("J", false)
         end
         
         LocalPlayer.PlayerGui:WaitForChild("PushupsGui", 10)
@@ -21,6 +22,12 @@ function AutoPushups()
                 task.wait()
             end)
         until _G.Settings.AutoPushups == false or not LocalPlayer.PlayerGui:FindFirstChild("PushupsGui")
+    end
+end
+
+function AutoMeditation()
+    for i = 1, 100 do
+        Character.Character.input:FireServer("M", false)
     end
 end
 
@@ -35,5 +42,10 @@ win:Toggle("Auto Pushups", false, function(state)
         AutoPushups() 
     end
 end)
+
+win:Button("Mass Meditate", function()
+    pcall(AutoMeditation) 
+end)
+
 
 
