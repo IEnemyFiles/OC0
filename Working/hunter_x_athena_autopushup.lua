@@ -29,7 +29,7 @@ end
 
 function AutoMeditation()
     for i = 1, _G.Settings.MeditationAmount do
-        Character.Character.input:FireServer("M", false)
+        LocalPlayer.Character.Character.input:FireServer("M", false)
     end
 end
 
