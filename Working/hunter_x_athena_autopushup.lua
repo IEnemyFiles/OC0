@@ -1,6 +1,8 @@
 _G.Settings = {
     ["AutoPushups"] = false,
     ["MeditationAmount"] = 1000,
+    ["AutoStamina"] = false,
+    ["AutoRun"] = false,
 }
 
 local LocalPlayer = game.Players.LocalPlayer
@@ -31,6 +33,38 @@ function AutoMeditation()
     end
 end
 
+function AutoClimb()
+    while task.wait(0.5) and _G.Settings.AutoStamina do
+        pcall(function()
+            LocalPlayer.PlayerGui.MainMenu.Enabled = false
+            
+            for i = 1, 100 do
+                LocalPlayer.Character.Character.input:FireServer("ClimbStart")
+            end
+            
+            if LocalPlayer.Character:FindFirstChild("Head") then
+                LocalPlayer.Character.Head:Destroy()
+            end
+        end)
+    end
+end
+
+function AutoRun()
+    while task.wait(0.5) and _G.Settings.AutoRun do
+        pcall(function()
+            LocalPlayer.PlayerGui.MainMenu.Enabled = false
+            
+            for i = 1, 100 do
+                LocalPlayer.Character.Character.input:FireServer("FastSprintStart", true)
+            end
+            
+            if LocalPlayer.Character:FindFirstChild("Head") then
+                LocalPlayer.Character.Head:Destroy()
+            end
+        end)
+    end
+end
+
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/miroeramaa/TurtleLib/main/TurtleUiLib.lua"))()
 
 local win = library:Window("Main")
@@ -40,6 +74,22 @@ win:Toggle("Auto Pushups", false, function(state)
     
     if state then
         AutoPushups() 
+    end
+end)
+
+win:Toggle("Auto Climb", false, function(state)
+    _G.Settings.AutoStamina = state
+    
+    if state then
+        pcall(AutoClimb) 
+    end
+end)
+
+win:Toggle("Auto Run", false, function(state)
+    _G.Settings.AutoRun = state
+    
+    if state then
+        pcall(AutoRun) 
     end
 end)
 
