@@ -28,18 +28,13 @@ local function DamageMob(mob)
 end
 
 Run.Heartbeat:Connect(function()
+    if getgenv().Enabled == nil or getgenv().Enabled == false then return end
+    
     for i,v in next, workspace.NPCs:GetChildren() do
         local dist = (plr.Character.PrimaryPart.Position - v.PrimaryPart.Position).Magnitude
         
-        if dist < getgenv().MaxRange and CurrentThreadCount < MaxThreads then
-            CurrentThreadCount += 1
-            task.spawn(function()
-                repeat
-                    DamageMob(v)
-                    Run.Heartbeat:Wait()
-                until v == nil or v:FindFirstChildOfClass("Humanoid") == nil or v.Humanoid.Health <= 0 or (plr.Character.PrimaryPart.Position - v.PrimaryPart.Position).Magnitude >= MaxRange
-                CurrentThreadCount -= 1
-            end)
+        if dist < MaxRange then
+            DamageMob(v)
         end
     end
 end)
