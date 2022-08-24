@@ -1,7 +1,7 @@
 --// game link: https://www.roblox.com/games/9585537847/SHADOVIS-RPG
 
 getgenv().MaxRange = 25
-getgenv().MaxThreads = 1
+getgenv().MaxThreads = 9e9
 getgenv().CurrentThreadCount = 0
 
 local Run = game:GetService("RunService")
