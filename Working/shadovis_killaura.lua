@@ -12,7 +12,7 @@ local function getM1Name(Weapon, WeaponType)
     local Data = {
         Character = game.Players.LocalPlayer.Character,
         Stats = {AS = 1},
-        Tools = {WeaponName},
+        Tools = {Weapon},
         Anim = require(game.ReplicatedStorage.AnimationService),
     }
     
