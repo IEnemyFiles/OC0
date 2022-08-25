@@ -47,8 +47,8 @@ Run.Heartbeat:Connect(function()
     
     for i,v in next, workspace.NPCs:GetChildren() do
         local dist = (plr.Character.PrimaryPart.Position - v.PrimaryPart.Position).Magnitude
-
-        if dist < MaxRange or 25 then
+        local MaxRange = MaxRange or 25
+        if dist < MaxRange then
             DamageMob(v)
         end
     end
