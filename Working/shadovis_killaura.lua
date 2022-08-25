@@ -43,7 +43,7 @@ local function DamageMob(mob)
 end
 
 Run.Heartbeat:Connect(function()
-    if getgenv().Enabled == nil or getgenv().Enabled == false then return end
+    if getgenv().Enabled ~= true then return end
     
     for i,v in next, workspace.NPCs:GetChildren() do
         local dist = (plr.Character.PrimaryPart.Position - v.PrimaryPart.Position).Magnitude
