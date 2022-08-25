@@ -1,6 +1,3 @@
-getgenv().Enabled = true
-getgenv().MaxRange = 25 --In studs
-
 local Run = game:GetService("RunService")
 local plr = game.Players.LocalPlayer
 
