@@ -6,7 +6,7 @@ local combatData = game:GetService("ReplicatedStorage").CombatData
 
 local WeaponName, WeaponType, WeaponM1Name
 
-local function getM1Name(WeaponName, WeaponType)
+local function getM1Name(Weapon, WeaponType)
     local weaponModule = require(combatData[WeaponType])
     
     local Data = {
@@ -49,14 +49,14 @@ end
 for i,v in next, plr.Character.Equipment:GetChildren() do
     if isMeleeWeapon(v.Name) then
         WeaponName, WeaponType = v.Name, weaponData[v.Name].Type
-        WeaponM1Name = getM1Name(WeaponName, WeaponType)
+        WeaponM1Name = getM1Name(v, WeaponType)
     end
 end
 
 plr.Character.Equipment.ChildAdded:Connect(function(v)
     if isMeleeWeapon(v.Name) then
         WeaponName, WeaponType = v.Name, weaponData[v.Name].Type
-        WeaponM1Name = getM1Name(WeaponName, WeaponType)
+        WeaponM1Name = getM1Name(v, WeaponType)
     end
 end)
 
