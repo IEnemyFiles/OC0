@@ -1,4 +1,5 @@
---// game link: https://www.roblox.com/games/9585537847/SHADOVIS-RPG
+getgenv().Enabled = true
+getgenv().MaxRange = 25 --In studs
 
 local Run = game:GetService("RunService")
 local plr = game.Players.LocalPlayer
@@ -25,16 +26,40 @@ local function getM1Name(WeaponName, WeaponType)
     end
 end
 
+local meleeWeaponNames = {
+    "Sword",
+    "Club",
+    "Longsword",
+    "Axe",
+    "Katana",
+    "Spear",
+    "Axe",
+    "Knife",
+    "Mallet",
+    "Blade",
+    "Gauntlets",
+    "Lance",
+    "Scythe",
+    "Twin Blade"
+}
+
+local function isMeleeWeapon(WeaponName)
+    if weaponData[WeaponName] and table.find(meleeWeaponNames, weaponData[WeaponName].Type) then
+        return true
+    end
+end
+
 for i,v in next, plr.Character.Equipment:GetChildren() do
-    if v:FindFirstChild("CharacterWeld") and v.CharacterWeld:FindFirstChild("SwordGrip") then
+    if isMeleeWeapon(v.Name) then
         WeaponName, WeaponType = v.Name, weaponData[v.Name].Type
         WeaponM1Name = getM1Name(WeaponName, WeaponType)
     end
 end
 
 plr.Character.Equipment.ChildAdded:Connect(function(v)
-    if v:FindFirstChild("CharacterWeld") and v.CharacterWeld:FindFirstChild("SwordGrip") then
-        WeaponName = v.Name
+    if isMeleeWeapon(v.Name) then
+        WeaponName, WeaponType = v.Name, weaponData[v.Name].Type
+        WeaponM1Name = getM1Name(WeaponName, WeaponType)
     end
 end)
 
