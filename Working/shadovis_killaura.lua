@@ -68,7 +68,7 @@ end
 
 Run.Heartbeat:Connect(function()
     if getgenv().Enabled ~= true then return end
-    
+    task.wait(0.1)
     for i,v in next, workspace.NPCs:GetChildren() do
         local dist = (plr.Character.PrimaryPart.Position - v.PrimaryPart.Position).Magnitude
 
