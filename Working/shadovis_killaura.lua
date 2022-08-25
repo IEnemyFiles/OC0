@@ -5,11 +5,32 @@ getgenv().MaxRange = 25
 local Run = game:GetService("RunService")
 local plr = game.Players.LocalPlayer
 
-local WeaponName
+local weaponData = require(game:GetService("ReplicatedStorage").WeaponData)
+local combatData = game:GetService("ReplicatedStorage").CombatData
+
+local WeaponName, WeaponType, WeaponM1Name
+
+local function getM1Name(WeaponName, WeaponType)
+    local weaponModule = require(combatData[WeaponType])
+    
+    local Data = {
+        Character = game.Players.LocalPlayer.Character,
+        Stats = {AS = 1},
+        Tools = {WeaponName},
+        Anim = require(game.ReplicatedStorage.AnimationService),
+    }
+    
+    for i,v in next, weaponModule(Data) do
+        if v.LMB then
+            return v.LMB[1]
+        end
+    end
+end
 
 for i,v in next, plr.Character.Equipment:GetChildren() do
     if v:FindFirstChild("CharacterWeld") and v.CharacterWeld:FindFirstChild("SwordGrip") then
-        WeaponName = v.Name
+        WeaponName, WeaponType = v.Name, weaponData[v.Name].Type
+        WeaponM1Name = getM1Name(WeaponName, WeaponType)
     end
 end
 
@@ -20,7 +41,7 @@ plr.Character.Equipment.ChildAdded:Connect(function(v)
 end)
 
 local function DamageMob(mob)
-    plr.Character.Combat.RemoteEvent:FireServer("Input", WeaponName or "Broken Sword", math.random(), "SlashEvent", mob.PrimaryPart)
+    plr.Character.Combat.RemoteEvent:FireServer("Input", WeaponName or "Broken Sword", math.random(), WeaponM1Name.."Event", mob.PrimaryPart)
 end
 
 Run.Heartbeat:Connect(function()
