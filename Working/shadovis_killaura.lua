@@ -16,7 +16,7 @@ local function getM1Name(Weapon, WeaponType)
         Anim = require(game.ReplicatedStorage.AnimationService),
     }
     
-    for i,v in next, weaponModule(Data) do
+    for i,v in next, weaponModule(Data, Weapon) do
         if v.LMB then
             return v.LMB[1]
         end
