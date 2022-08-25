@@ -1,7 +1,5 @@
 --// game link: https://www.roblox.com/games/9585537847/SHADOVIS-RPG
 
-getgenv().MaxRange = 25
-
 local Run = game:GetService("RunService")
 local plr = game.Players.LocalPlayer
 
@@ -50,7 +48,7 @@ Run.Heartbeat:Connect(function()
     for i,v in next, workspace.NPCs:GetChildren() do
         local dist = (plr.Character.PrimaryPart.Position - v.PrimaryPart.Position).Magnitude
 
-        if dist < MaxRange then
+        if dist < MaxRange or 25 then
             DamageMob(v)
         end
     end
