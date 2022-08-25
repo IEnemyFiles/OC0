@@ -61,7 +61,9 @@ plr.Character.Equipment.ChildAdded:Connect(function(v)
 end)
 
 local function DamageMob(mob)
-    plr.Character.Combat.RemoteEvent:FireServer("Input", WeaponName or "Broken Sword", math.random(), WeaponM1Name.."Event", mob.PrimaryPart)
+    if mob and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+        plr.Character.Combat.RemoteEvent:FireServer("Input", WeaponName, math.random(), WeaponM1Name.."Event", mob.PrimaryPart)
+    end
 end
 
 Run.Heartbeat:Connect(function()
